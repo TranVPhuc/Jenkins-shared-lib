@@ -1,6 +1,6 @@
-@Library('Jenkins-shared-lib') _
+@Library('autoScaling-lib') _
 
-autoScalingWrapper(
+autoScaling(
     region: 'ap-southeast-1',
     asgName: 'test-asg',
     agentLabel: 'agent1'

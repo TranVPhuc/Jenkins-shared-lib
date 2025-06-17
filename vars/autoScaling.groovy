@@ -35,7 +35,7 @@ def call(Map config = [:], Closure body) {
                 agent { label "${agentLabel}" }
                 steps {
                     script {
-                        body() // gọi phần logic chính trong Jenkinsfile
+                        body() 
                     }
                 }
             }

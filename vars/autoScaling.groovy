@@ -5,37 +5,37 @@ def call(Map config = [:], Closure body) {
 
     pipeline {
         agent any
-        environment {
-            AWS_REGION = region
-            ASG_NAME = asgName
-            AGENT_LABEL = agentLabel
-        }
 
         stages {
-            stage('Scale up ASG') {
+            stage('Set env and Scale up ASG') {
                 steps {
-                    sh """
-                        set -e
+                    script {
+                        env.AWS_REGION = region
+                        env.ASG_NAME = asgName
+                        env.AGENT_LABEL = agentLabel
+
+                        echo "Scaling up ASG: ${env.ASG_NAME} in region: ${env.AWS_REGION}"
+                        sh """
                         aws autoscaling update-auto-scaling-group \
-                          --auto-scaling-group-name "${ASG_NAME}" \
+                          --auto-scaling-group-name "${env.ASG_NAME}" \
                           --desired-capacity 1 \
-                          --region "${AWS_REGION}"
-                    """
+                          --region "${env.AWS_REGION}"
+                        """
+                    }
                 }
             }
 
-            stage('Wait for agent to connect') {
+            stage('Wait for agent') {
                 steps {
-                    echo "Waiting for Jenkins agent to connect..."
                     sleep(time: 60, unit: 'SECONDS')
                 }
             }
 
-            stage('Run Task') {
+            stage('Run main body') {
                 agent { label "${agentLabel}" }
                 steps {
                     script {
-                        body() 
+                        body()
                     }
                 }
             }
@@ -43,13 +43,15 @@ def call(Map config = [:], Closure body) {
 
         post {
             always {
-                sh """
-                    set -e
+                script {
+                    echo "Scaling down ASG: ${env.ASG_NAME}"
+                    sh """
                     aws autoscaling update-auto-scaling-group \
-                      --auto-scaling-group-name "${ASG_NAME}" \
+                      --auto-scaling-group-name "${env.ASG_NAME}" \
                       --desired-capacity 0 \
-                      --region "${AWS_REGION}"
-                """
+                      --region "${env.AWS_REGION}"
+                    """
+                }
             }
         }
     }

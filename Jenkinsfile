@@ -1,4 +1,4 @@
-@Library('autoScaling-lib') _
+@Library('Jenkins-shared-lib') _
 
 autoScalingWrapper(
     region: 'ap-southeast-1',
